@@ -2,45 +2,49 @@ import torch
 import torch.nn
 import torch.nn.functional
 
+
 class FireModule(torch.nn.Module):
 
     def __init__(self, in_channels, s1x1, e1x1, e3x3):
-
         super(FireModule, self).__init__()
 
-        self.s1x1 = torch.nn.Conv2d(in_channels,s1x1,1)
-        self.e1x1 = torch.nn.Conv2d(s1x1,e1x1,1)
-        self.e3x3 = torch.nn.Conv2d(s1x1,e3x3,3,padding=1)
+        self.s1x1 = torch.nn.Conv2d(in_channels, s1x1, 1)
+        self.e1x1 = torch.nn.Conv2d(s1x1, e1x1, 1)
+        self.e3x3 = torch.nn.Conv2d(s1x1, e3x3, 3, padding=1)
 
     def forward(self, x):
+        x = self.s1x1(x)  # squeeze
+        x = torch.nn.functional.relu(x)  # squeeze ReLU
 
-        x = self.s1x1(x) # squeeze
-        x = torch.nn.functional.relu(x) # squeeze ReLU
-
-        x1 = self.e1x1(x) # expand 1x1
-        x2 = self.e3x3(x) # expand 3x3
-        out = torch.cat((x1,x2),dim=1) # concat expand
-        out = torch.nn.functional.relu(out) #expand ReLU
+        x1 = self.e1x1(x)  # expand 1x1
+        x2 = self.e3x3(x)  # expand 3x3
+        out = torch.cat((x1, x2), dim=1)  # concat expand
+        out = torch.nn.functional.relu(out)  # expand ReLU
 
         return out
 
+
 class SqueezeNet(torch.nn.Module):
 
-    def __init__(self, type = 1, num_classes = 10):
-
+    def __init__(self, type="vanilla", num_classes=10):
         super(SqueezeNet, self).__init__()
 
-        self.conv1 = torch.nn.Conv2d(3,96,7,stride=2, padding=2)
+        assert type == "vanilla" or type == "simple_bypass" or type == "complex_bypass", \
+            "SqueezeNet type error, should be either 'vanilla', 'simple_bypass' or 'complex_bypass'"
+
+        self.type = type
+
+        self.conv1 = torch.nn.Conv2d(3, 96, 7, stride=2, padding=2)
         self.maxpool1 = torch.nn.MaxPool2d(3, stride=2)
-        self.fire2 = FireModule(96,16,64,64)
-        self.fire3 = FireModule(128,16,64,64)
-        self.fire4 = FireModule(128,32,128,128)
+        self.fire2 = FireModule(96, 16, 64, 64)
+        self.fire3 = FireModule(128, 16, 64, 64)
+        self.fire4 = FireModule(128, 32, 128, 128)
         self.maxpool4 = torch.nn.MaxPool2d(3, stride=2)
 
-        self.fire5 = FireModule(256,32,128,128)
-        self.fire6 = FireModule(256,48,192,192)
-        self.fire7 = FireModule(384,48,192,192)
-        self.fire8 = FireModule(384,64,256,256)
+        self.fire5 = FireModule(256, 32, 128, 128)
+        self.fire6 = FireModule(256, 48, 192, 192)
+        self.fire7 = FireModule(384, 48, 192, 192)
+        self.fire8 = FireModule(384, 64, 256, 256)
 
         self.maxpool8 = torch.nn.MaxPool2d(3, stride=2)
 
@@ -52,7 +56,6 @@ class SqueezeNet(torch.nn.Module):
         self.fc = torch.nn.Linear(in_features=1000, out_features=num_classes)
 
     def forward(self, x):
-
         x = self.conv1(x)
         x = self.maxpool1(x)
 

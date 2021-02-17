@@ -23,8 +23,7 @@ def get_cifar10_dataloaders():
         transforms.ToTensor(),
         normalize,
     ]), download=True),
-    batch_size=config.BATCH_SIZE, shuffle=True,
-    num_workers=config.WORKERS, pin_memory=True)
+    batch_size=config.BATCH_SIZE, shuffle=True, pin_memory=True)
 
 
     val_loader = torch.utils.data.DataLoader(
@@ -34,7 +33,6 @@ def get_cifar10_dataloaders():
             transforms.ToTensor(),
             normalize,
         ])),
-    batch_size=config.BATCH_SIZE, shuffle=False,
-    num_workers=config.WORKERS, pin_memory=True)
+    batch_size=config.BATCH_SIZE, shuffle=False, pin_memory=True)
 
     return train_loader, val_loader
