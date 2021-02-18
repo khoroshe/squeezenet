@@ -26,7 +26,7 @@ class FireModule(torch.nn.Module):
 
 class SqueezeNet(torch.nn.Module):
 
-    def __init__(self, type="vanilla", num_classes=10):
+    def __init__(self, input_shape = 224, type="vanilla", num_classes=10):
         super(SqueezeNet, self).__init__()
 
         assert type == "vanilla" or type == "simple_bypass" or type == "complex_bypass", \
@@ -49,9 +49,15 @@ class SqueezeNet(torch.nn.Module):
         self.maxpool8 = torch.nn.MaxPool2d(3, stride=2)
 
         self.fire9 = FireModule(512, 64, 256, 256)
+
+        self.dropout = torch.nn.Dropout(p=0.5)
+
         self.conv10 = torch.nn.Conv2d(512, 1000, 1)
 
-        self.avgpool10 = torch.nn.AvgPool2d(13, stride=1)
+        if input_shape == 224:
+            self.avgpool10 = torch.nn.AvgPool2d(13, stride=1)
+        elif input_shape == 32:
+            self.avgpool10 = torch.nn.AvgPool2d(1, stride=1)
 
         self.fc = torch.nn.Linear(in_features=1000, out_features=num_classes)
 
@@ -73,6 +79,8 @@ class SqueezeNet(torch.nn.Module):
         x = self.maxpool8(x)
 
         x = self.fire9(x)
+
+        x = self.dropout(x)
 
         x = self.conv10(x)
         x = self.avgpool10(x)

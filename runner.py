@@ -27,17 +27,17 @@ args = SimpleNamespace()
 
 args.device_name = config.DEVICE
 
-args.epochs = 100
+args.epochs = 200
 args.start_epoch = 0
 args.save_every = 1
 
 args.print_freq = 10
 
-args.save_dir = "./checkpoint"
+args.save_dir = "vanilla_224_no_dropout"
 args.pretrained = True
 args.evaluate = False
 
-args.lr = 1e-3
+args.lr = 1e-4
 # args.momentum = 0.9
 # args.weight_decay = 0
 
@@ -52,7 +52,7 @@ def main():
 
     train_loader, val_loader = util.get_cifar10_dataloaders()
 
-    model = backbone.SqueezeNet(type='vanilla', num_classes=config.NUMBER_OF_CLASSES)
+    model = backbone.SqueezeNet(type='vanilla', input_shape=32, num_classes=config.NUMBER_OF_CLASSES)
     model.to(device)
     model = nn.DataParallel(model)
 
@@ -62,7 +62,7 @@ def main():
     # optimizer = torch.optim.SGD(model.parameters(), lr=args.lr, momentum=args.momentum)
     optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
 
-    lr_scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, factor=0.5, patience=3, eps=1e-6, verbose=True)
+    lr_scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, factor=0.1, patience=10, eps=1e-6, verbose=True)
 
     if args.evaluate:
         validate(val_loader, model, criterion)
@@ -78,7 +78,7 @@ def main():
         val_acc, val_loss, cm, f1 = validate(val_loader, model, criterion)
         util.printf("val_loss: %.3f, val_acc: %.3f\n", val_loss, val_acc / 100)
 
-        # remember best prec@1 and save checkpoint
+        # remember best prec@1 and save vanilla_224_no_dropout
         is_best = val_acc > best_acc
         best_acc = max(val_acc, best_acc)
 
@@ -100,14 +100,16 @@ def main():
     model.load_state_dict(state_dict)
 
     pred = torch.empty(0, config.NUMBER_OF_CLASSES)
+    y_val = torch.empty(0, config.NUMBER_OF_CLASSES)
     with torch.no_grad():
         for i, (input, target) in enumerate(val_loader):
-            target = target.to(device)
             input_var = input.to(device)
 
             # compute output
             output = model(input_var)
             pred = torch.cat((pred, output.cpu()), dim=0)
+
+            y_val = torch.cat((y_val, target), dim=0)
 
     pred = pred.numpy()
 
@@ -236,7 +238,7 @@ def validate(val_loader, model, criterion, print_cm = True):
 
     return top1.avg, losses.avg, confusion_matrix(y_test, pred_y), f1_score(y_test, pred_y, average=None)
 
-def save_checkpoint(state, is_best, filename='checkpoint.pth.tar'):
+def save_checkpoint(state, is_best, filename='vanilla_224_no_dropout.pth.tar'):
     """
     Save the training model
     """

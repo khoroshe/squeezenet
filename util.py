@@ -17,8 +17,8 @@ def get_cifar10_dataloaders():
 
     train_loader = torch.utils.data.DataLoader(
     datasets.CIFAR10(root='./data', train=True, transform=transforms.Compose([
-        transforms.Resize(256),
-        transforms.CenterCrop(224),
+        # transforms.Resize(256),
+        # transforms.CenterCrop(224),
         transforms.RandomHorizontalFlip(),
         transforms.ToTensor(),
         normalize,
@@ -28,8 +28,8 @@ def get_cifar10_dataloaders():
 
     val_loader = torch.utils.data.DataLoader(
         datasets.CIFAR10(root='./data', train=False, transform=transforms.Compose([
-            transforms.Resize(256),
-            transforms.CenterCrop(224),
+            # transforms.Resize(256),
+            # transforms.CenterCrop(224),
             transforms.ToTensor(),
             normalize,
         ])),
