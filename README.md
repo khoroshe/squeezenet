@@ -17,7 +17,7 @@ You don't. I just had fun doing it :)
 #### How do I run it?
 
 1. Set relevant config parameters in `config.py` (number of classes, image preprocessing option, random seeds, visible gpus)
-2. Set revevant args parameters in `runner.py` (for training new model set `args.save_dir`, `args.evaluate = False`, for evaluation `args.evaluate = True` and provide `args.pretrained_model_path` (those are stored in `/results` folder) )
+2. Set revevant args parameters in `runner.py` (for training new model set `args.save_dir`, `args.evaluate = False`, for evaluation `args.evaluate = True` and provide `args.pretrained_model_path` (those are stored in `/results` folder and can be used as a starting point for subsequent training) )
 3. Run and enjoy
 
 #### Fun Facts
