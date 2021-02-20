@@ -47,12 +47,12 @@ Adding simple bypass architectural change does not improve classifier accuracy:
 | vanilla, 224x224x3, with fc | 0.591 | 0.814 |
 | simple bypass, 224x224x3, with fc | 0.614 | 0.812 |
 
-Confusion Matrix:
+##### Confusion Matrix:
 
 ![Alt text](./results/confusion_matrix.png?raw=true)
 
 
-F1 Scores:
+##### F1 Scores:
 
 | Class | F1-Score |
 | --- | --- |
