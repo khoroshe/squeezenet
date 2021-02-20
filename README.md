@@ -8,6 +8,7 @@ A simple pytorch implementation of SqueezeNet from [Iandola *et al.*](https://ar
 * torchvision 0.8.1
 * numpy 1.19.2
 * scikit-learn 0.23.2
+* matplotlib 3.3.2
 
 #### Why do I need another SqueezeNet for PyTorch?
 
@@ -46,6 +47,11 @@ Adding simple bypass architectural change does not improve classifier accuracy:
 | vanilla, 224x224x3, with fc | 0.591 | 0.814 |
 | simple bypass, 224x224x3, with fc | 0.614 | 0.812 |
 
+Confusion Matrix:
+
+![Alt text](results/confusion_matrix.jpg?raw=true)
+
+
 F1 Scores:
 
 | Class | F1-Score |
@@ -59,4 +65,4 @@ F1 Scores:
 |frog|0.849|
 |horse|0.841|
 |ship|0.891|
-|truck|0.886| 
+|truck|0.886|
