@@ -49,7 +49,7 @@ Adding simple bypass architectural change does not improve classifier accuracy:
 
 Confusion Matrix:
 
-![Alt text](./results/confusion_matrix.jpg?raw=true)
+![Alt text](./results/confusion_matrix.png?raw=true)
 
 
 F1 Scores:
