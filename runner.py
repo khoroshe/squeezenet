@@ -38,7 +38,7 @@ args.save_dir = "simple_bypass_224_fc"
 
 args.pretrained = True
 args.evaluate = True
-args.pretrained_model_path = "results/simplebypass_224_fc_trainAcc_90.428_valAcc_81.170_checkpoint.th"
+args.pretrained_model_path = "results/vanilla_224_wo_fc_trainAcc_88.712_valAcc_81.100_checkpoint.th"
 
 args.lr = 5e-4
 # args.momentum = 0.9
@@ -55,7 +55,7 @@ def main():
 
     train_loader, val_loader = util.get_cifar10_dataloaders()
 
-    model = backbone.SqueezeNet(type='simple_bypass', add_fc_layer=True, num_classes=config.NUMBER_OF_CLASSES)
+    model = backbone.SqueezeNet(type='vanilla', add_fc_layer=False, num_classes=config.NUMBER_OF_CLASSES)
     model.to(device)
     model = nn.DataParallel(model)
 
