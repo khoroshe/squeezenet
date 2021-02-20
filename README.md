@@ -39,9 +39,24 @@ It was found that using larger image sizes (224x224x3) and ImageNet-like preproc
 | vanilla, 224x224x3, with fc | 0.591 | 0.814 |
 | vanilla, 32x32x3 with fc | 1.112 | 0.603 |
 
-Adding simple bypass architectural change won't yield improved results unfortunately:
+Adding simple bypass architectural change does not improve classifier accuracy:
 
 | Design & Preprocessing | Validation Loss | Validation Accuracy
 | --- | --- | --- |
 | vanilla, 224x224x3, with fc | 0.591 | 0.814 |
 | simple bypass, 224x224x3, with fc | 0.614 | 0.812 |
+
+F1 Scores:
+
+| Class | F1-Score |
+| --- | --- |
+|plane|0.815|
+|car|0.895|
+|bird|0.725|
+|cat|0.667|
+|deer|0.783|
+|dog|0.760|
+|frog|0.849|
+|horse|0.841|
+|ship|0.891|
+|truck|0.886| 
