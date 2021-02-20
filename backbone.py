@@ -2,6 +2,8 @@ import torch
 import torch.nn
 import torch.nn.functional
 
+import config
+
 
 class FireModule(torch.nn.Module):
 
@@ -26,13 +28,14 @@ class FireModule(torch.nn.Module):
 
 class SqueezeNet(torch.nn.Module):
 
-    def __init__(self, input_shape = 224, type="vanilla", num_classes=10):
+    def __init__(self, type="vanilla", add_fc_layer = False, num_classes=10):
         super(SqueezeNet, self).__init__()
 
-        assert type == "vanilla" or type == "simple_bypass" or type == "complex_bypass", \
-            "SqueezeNet type error, should be either 'vanilla', 'simple_bypass' or 'complex_bypass'"
+        assert type == "vanilla" or type == "simple_bypass", \
+            "SqueezeNet type error, should be either 'vanilla' or 'simple_bypass'"
 
         self.type = type
+        self.add_fc_layer = add_fc_layer
 
         self.conv1 = torch.nn.Conv2d(3, 96, 7, stride=2, padding=2)
         self.maxpool1 = torch.nn.MaxPool2d(3, stride=2)
@@ -52,33 +55,61 @@ class SqueezeNet(torch.nn.Module):
 
         self.dropout = torch.nn.Dropout(p=0.5)
 
-        self.conv10 = torch.nn.Conv2d(512, 1000, 1)
+        if add_fc_layer:
+            self.conv10 = torch.nn.Conv2d(512, 1000, 1)
+            self.fc = torch.nn.Linear(in_features=1000, out_features=num_classes)
+        else:
+            self.conv10 = torch.nn.Conv2d(512, num_classes, 1)
 
-        if input_shape == 224:
+        if config.DATA_PREPROCESSING == "IMAGENET":
             self.avgpool10 = torch.nn.AvgPool2d(13, stride=1)
-        elif input_shape == 32:
+        elif config.DATA_PREPROCESSING == "CIFAR10":
             self.avgpool10 = torch.nn.AvgPool2d(1, stride=1)
 
-        self.fc = torch.nn.Linear(in_features=1000, out_features=num_classes)
+
 
     def forward(self, x):
         x = self.conv1(x)
         x = self.maxpool1(x)
 
         x = self.fire2(x)
-        x = self.fire3(x)
+
+        if self.type == "simple_bypass":
+            x_temp = self.fire3(x)
+            x = x + x_temp
+        else:
+            x = self.fire3(x)
+
+
+
         x = self.fire4(x)
 
         x = self.maxpool4(x)
 
-        x = self.fire5(x)
+        if self.type == "simple_bypass":
+            x_temp = self.fire5(x)
+            x = x + x_temp
+        else:
+            x = self.fire5(x)
+
         x = self.fire6(x)
-        x = self.fire7(x)
+
+        if self.type == "simple_bypass":
+            x_temp = self.fire7(x)
+            x = x + x_temp
+        else:
+            x = self.fire7(x)
+
+
         x = self.fire8(x)
 
         x = self.maxpool8(x)
 
-        x = self.fire9(x)
+        if self.type == "simple_bypass":
+            x_temp = self.fire9(x)
+            x = x + x_temp
+        else:
+            x = self.fire9(x)
 
         x = self.dropout(x)
 
@@ -87,6 +118,7 @@ class SqueezeNet(torch.nn.Module):
 
         x = torch.squeeze(x)
 
-        x = self.fc(x)
+        if self.add_fc_layer:
+            x = self.fc(x)
 
         return x

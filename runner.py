@@ -11,7 +11,8 @@ import torch.nn.parallel
 import torch.optim
 import torch.utils.data
 
-from sklearn.metrics import confusion_matrix, f1_score
+from sklearn.metrics import confusion_matrix, f1_score, ConfusionMatrixDisplay
+import matplotlib.pyplot as plt
 
 import backbone
 
@@ -33,11 +34,13 @@ args.save_every = 1
 
 args.print_freq = 10
 
-args.save_dir = "vanilla_224_no_dropout"
-args.pretrained = True
-args.evaluate = False
+args.save_dir = "simple_bypass_224_fc"
 
-args.lr = 1e-4
+args.pretrained = True
+args.evaluate = True
+args.pretrained_model_path = "results/simplebypass_224_fc_trainAcc_90.428_valAcc_81.170_checkpoint.th"
+
+args.lr = 5e-4
 # args.momentum = 0.9
 # args.weight_decay = 0
 
@@ -52,9 +55,15 @@ def main():
 
     train_loader, val_loader = util.get_cifar10_dataloaders()
 
-    model = backbone.SqueezeNet(type='vanilla', input_shape=32, num_classes=config.NUMBER_OF_CLASSES)
+    model = backbone.SqueezeNet(type='simple_bypass', add_fc_layer=True, num_classes=config.NUMBER_OF_CLASSES)
     model.to(device)
     model = nn.DataParallel(model)
+
+    if args.pretrained and args.pretrained_model_path != "":
+        checkpoint = torch.load(args.pretrained_model_path)
+        state_dict = checkpoint["state_dict"]
+
+        model.load_state_dict(state_dict)
 
     # define loss function (criterion) and optimizer
     criterion = nn.CrossEntropyLoss()
@@ -62,10 +71,20 @@ def main():
     # optimizer = torch.optim.SGD(model.parameters(), lr=args.lr, momentum=args.momentum)
     optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
 
-    lr_scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, factor=0.1, patience=10, eps=1e-6, verbose=True)
+    lr_scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, factor=0.5, patience=5, eps=1e-6, verbose=True)
 
     if args.evaluate:
-        validate(val_loader, model, criterion)
+        val_acc, val_loss, cm, f1 = validate(val_loader, model, criterion, calc_cm=True)
+        util.printf("val_loss: %.3f, val_acc: %.3f\n", val_loss, val_acc / 100)
+        cifar10_classes = util.get_cifar10_labels()
+        disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=cifar10_classes)
+        disp.plot()
+        plt.show()
+
+        util.printf("F1 scores:\n")
+        for i in range(0,10):
+            util.printf("%s:%.3f ", cifar10_classes[i], f1[i])
+        util.printf("\n")
         return
 
     for epoch in range(args.start_epoch, args.epochs):
@@ -75,7 +94,7 @@ def main():
         util.printf("train_loss: %.3f, train_acc: %.3f\n", train_loss, train_acc / 100)
 
         # evaluate on validation set
-        val_acc, val_loss, cm, f1 = validate(val_loader, model, criterion)
+        val_acc, val_loss, _, _ = validate(val_loader, model, criterion)
         util.printf("val_loss: %.3f, val_acc: %.3f\n", val_loss, val_acc / 100)
 
         # remember best prec@1 and save vanilla_224_no_dropout
@@ -175,7 +194,7 @@ def train(train_loader, model, criterion, optimizer, epoch):
 
     return top1.avg, losses.avg
 
-def validate(val_loader, model, criterion, print_cm = True):
+def validate(val_loader, model, criterion, calc_cm = False):
     """
     Run evaluation
     """
@@ -224,19 +243,15 @@ def validate(val_loader, model, criterion, print_cm = True):
                           i, len(val_loader), batch_time=batch_time, loss=losses,
                           top1=top1))
 
-    # print(' * Prec@1 {top1.avg:.3f}'
-    #       .format(top1=top1))
+    if calc_cm:
+        pred = pred.numpy()
 
-    # if print_cm:
-    pred = pred.numpy()
-    #
-    pred_y = np.argmax(pred, axis=1)
-    #     cm = confusion_matrix(y_test, pred_y)
-    #
-    #     print(cm)
-    #     print(f1_score(y_test, pred_y, average=None))
+        pred_y = np.argmax(pred, axis=1)
+        cm = confusion_matrix(y_test, pred_y)
 
-    return top1.avg, losses.avg, confusion_matrix(y_test, pred_y), f1_score(y_test, pred_y, average=None)
+        return top1.avg, losses.avg, confusion_matrix(y_test, pred_y), f1_score(y_test, pred_y, average=None)
+
+    return top1.avg, losses.avg, None, None
 
 def save_checkpoint(state, is_best, filename='vanilla_224_no_dropout.pth.tar'):
     """
