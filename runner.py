@@ -55,7 +55,6 @@ def main():
 
     train_loader, val_loader = util.get_cifar10_dataloaders()
 
-
     model = backbone.SqueezeNet(type='vanilla', add_fc_layer=False, num_classes=config.NUMBER_OF_CLASSES)
     model.to(device)
     model = nn.DataParallel(model)
