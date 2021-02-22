@@ -112,33 +112,7 @@ def main():
         lr_scheduler.step(val_loss)
         # lr_scheduler.step()
 
-        del train_acc, train_loss, val_acc, val_loss
-
-    model_checkpoints = [f for f in os.listdir(args.save_dir) if os.path.isfile(os.path.join(args.save_dir, f))]
-    state_dict = torch.load(os.path.join(args.save_dir, model_checkpoints[-1]))["state_dict"]
-    model.load_state_dict(state_dict)
-
-    pred = torch.empty(0, config.NUMBER_OF_CLASSES)
-    y_val = torch.empty(0, config.NUMBER_OF_CLASSES)
-    with torch.no_grad():
-        for i, (input, target) in enumerate(val_loader):
-            input_var = input.to(device)
-
-            # compute output
-            output = model(input_var)
-            pred = torch.cat((pred, output.cpu()), dim=0)
-
-            y_val = torch.cat((y_val, target), dim=0)
-
-    pred = pred.numpy()
-
-    y_pred = np.argmax(pred, axis=1)
-    y_true = y_val
-    cm = confusion_matrix(y_true, y_pred)
-
-    print(cm)
-    print(f1_score(y_true, y_pred, average=None))
-
+        del train_acc, train_loss, val_acc, val_loss    
 
 def train(train_loader, model, criterion, optimizer, epoch):
     """
