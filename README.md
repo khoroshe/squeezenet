@@ -38,7 +38,7 @@ All options are provided as inputs upon model creation `model = backbone.Squeeze
 
 #### Results
 
-A number of design exploration around the optimal learning rate, fc layer usage and preferred image size was carried out. It was found that all models train properly with Adam optimizer and initil learing rates between 1E-4 - 5E-5. Also it was found that using larger image sizes (224x224x3) and ImageNet-like preprocessing was beneficial in terms of the validation accuracy as shown below. The inclusion of the fully connected Linear layer provided marginal improvement in "vanilla, 224x224x3" case.
+A number of design exploration around the optimal learning rate, fc layer usage and preferred image size was carried out. It was found that all models train properly with Adam optimizer and initial learing rates between 1E-4 - 5E-4. Also it was found that using larger image sizes (224x224x3) and ImageNet-like preprocessing was beneficial in terms of the validation accuracy as shown below. The inclusion of the fully connected Linear layer provided marginal improvement in "vanilla, 224x224x3" case.
 
 | Design & Preprocessing | Validation Loss | Validation Accuracy
 | --- | --- | --- |
